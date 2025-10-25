@@ -2,7 +2,7 @@
 FROM golang:1.21-alpine AS builder
 
 # Install required packages
-RUN apk add --no-cache gcc musl-dev
+RUN apk add --no-cache gcc musl-dev mysql-client
 
 # Set working directory
 WORKDIR /app
@@ -23,7 +23,7 @@ RUN CGO_ENABLED=1 GOOS=linux go build -o /app/main ./cmd/api/main.go
 FROM alpine:latest
 
 # Install required packages for runtime
-RUN apk add --no-cache ca-certificates tzdata freetype-dev
+RUN apk add --no-cache ca-certificates tzdata freetype-dev mysql-client
 
 # Create non-root user
 RUN adduser -D appuser
@@ -35,17 +35,20 @@ RUN mkdir -p /app/cache && \
 # Set working directory
 WORKDIR /app
 
-# Copy the binary from builder
+# Copy necessary files
 COPY --from=builder /app/main .
-
-# Copy .env file
+COPY init.sql .
+COPY start.sh .
 COPY .env .
 
+# Make the startup script executable
+RUN chmod +x start.sh
+
 # Set user
-USER appuser
+USER root
 
 # Expose port
 EXPOSE 8080
 
-# Run the application
-CMD ["./main"]
+# Run the startup script
+CMD ["./start.sh"]
