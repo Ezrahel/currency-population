@@ -1,9 +1,8 @@
 # Build stage
-FROM golang:1.21-alpine AS builder
+FROM golang:1.24-alpine AS builder
 
 # Install required packages
 RUN apk add --no-cache gcc musl-dev mysql-client
-
 # Set working directory
 WORKDIR /app
 
